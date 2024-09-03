@@ -1,4 +1,4 @@
-# BDDA-Project-2_top down-Pan Card
+# BDDA-Project-2_Bottom up-Pan Card
 # Overview
 This project focuses on the design and implementation of a relational database tailored for a PAN (Permanent Account Number) card management system. The database is structured using a top-down approach, emphasizing key aspects such as applicant management, address details, communication information, document proofs, and parent details. The project involves creating interconnected tables that capture various attributes related to PAN card applications, along with defining user roles with specific permissions to ensure secure and efficient data handling.
 
