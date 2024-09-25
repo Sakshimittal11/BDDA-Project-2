@@ -1,82 +1,100 @@
-create database pancard;
-use pancard;
+-- Create database and use it
+CREATE DATABASE IF NOT EXISTS pancard;
+USE pancard;
+
+-- Create Applicant table
 CREATE TABLE Applicant (
     ApplicantID INT AUTO_INCREMENT PRIMARY KEY,
-    FullName VARCHAR(255) NOT NULL,
     Title ENUM('Shri', 'Smt.', 'Kumari', 'M/s'),
-    KnownByOtherName BOOLEAN,
-    OtherName VARCHAR(255),
+    LastName VARCHAR(10) NOT NULL,
+    FirstName VARCHAR(10) NOT NULL,
+    MiddleName VARCHAR(10),
+    AbbreviationName VARCHAR(10) NOT NULL, -- Name to be printed on the PAN card
+    KnownByOtherName BOOLEAN DEFAULT FALSE,
+    OtherTitle ENUM('Shri', 'Smt.', 'Kumari', 'M/s') DEFAULT NULL,
+    OtherLastName VARCHAR(10) DEFAULT NULL,
+    OtherFirstName VARCHAR(10) DEFAULT NULL,
+    OtherMiddleName VARCHAR(10) DEFAULT NULL,
     Gender ENUM('Male', 'Female', 'Transgender'),
-    DateOfBirth DATE NOT NULL,
-    Status ENUM('Government', 'Individual', 'Hindu undivided family', 'Company', 'Partnership Firm', 
+    DateOfBirth DATE NOT NULL, -- For individuals, actual date of birth; for others, date of incorporation
+    Status ENUM('Government', 'Individual', 'Hindu Undivided Family', 'Company', 'Partnership Firm', 
                 'Association of Persons', 'Trusts', 'Body of Individuals', 'Local Authority', 
-                'Artificial Juridical Persons', 'Limited Liability Partnership'),
-    AadhaarNumber VARCHAR(12),
-    AadhaarEnrolmentID VARCHAR(28),
+                'Artificial Juridical Persons', 'Limited Liability Partnership') NOT NULL,
+    AadhaarNumber CHAR(12) UNIQUE,
+    AadhaarEnrolmentID VARCHAR(28) DEFAULT NULL,
     SourceOfIncome ENUM('Salary', 'Capital Gains', 'Income from Business/Profession', 
-                        'Income from Other sources', 'Income from House property', 'No income')
+                        'Income from Other Sources', 'Income from House Property', 'No Income') NOT NULL
 );
 
-CREATE TABLE Address (
-    AddressID INT AUTO_INCREMENT PRIMARY KEY,
-    ApplicantID INT,
-    AddressType ENUM('Residence', 'Office'),
-    FlatNo VARCHAR(50),
-    PremisesName VARCHAR(255),
-    RoadName VARCHAR(255),
-    AreaLocality VARCHAR(255),
-    City VARCHAR(100),
-    State VARCHAR(100),
-    Pincode VARCHAR(10),
-    Country VARCHAR(50),
-    FOREIGN KEY (ApplicantID) REFERENCES Applicant(ApplicantID)
-);
+-- Create ParentDetails table
 CREATE TABLE ParentDetails (
     ParentID INT AUTO_INCREMENT PRIMARY KEY,
-    ApplicantID INT,
-    ParentType ENUM('Father', 'Mother'),
-    FullName VARCHAR(255),
-    IsSingleParent BOOLEAN,
-    NameToPrint ENUM('Father', 'Mother'),
+    ApplicantID INT NOT NULL,
+    ParentType ENUM('Father', 'Mother') NOT NULL,
+    LastName VARCHAR(10) NOT NULL,
+    FirstName VARCHAR(10) NOT NULL,
+    MiddleName VARCHAR(10),
+    IsSingleParent BOOLEAN DEFAULT FALSE,
+    NameToPrint ENUM('Father', 'Mother') NOT NULL, -- Which parent's name should be printed on the PAN card
     FOREIGN KEY (ApplicantID) REFERENCES Applicant(ApplicantID)
 );
+
+-- Create Address table
+CREATE TABLE Address (
+    AddressID INT AUTO_INCREMENT PRIMARY KEY,
+    ApplicantID INT NOT NULL,
+    AddressType ENUM('Residence', 'Office') NOT NULL,
+    FlatNo VARCHAR(10),
+    PremisesName VARCHAR(25),
+    RoadName VARCHAR(25),
+    AreaLocality VARCHAR(25),
+    City VARCHAR(15),
+    State VARCHAR(15),
+    Pincode CHAR(6),
+    Country VARCHAR(15) DEFAULT 'India',
+    FOREIGN KEY (ApplicantID) REFERENCES Applicant(ApplicantID)
+);
+
+-- Create CommunicationDetails table
 CREATE TABLE CommunicationDetails (
     CommunicationID INT AUTO_INCREMENT PRIMARY KEY,
-    ApplicantID INT,
-    CountryCode VARCHAR(5),
+    ApplicantID INT NOT NULL,
+    CountryCode VARCHAR(5) DEFAULT '+91',
     AreaCode VARCHAR(10),
-    TelephoneNumber VARCHAR(15),
-    EmailID VARCHAR(255),
-    PreferredAddress ENUM('Residence', 'Office'),
+    TelephoneNumber VARCHAR(10),
+    EmailID VARCHAR(50),
+    PreferredAddress ENUM('Residence', 'Office') NOT NULL,
     FOREIGN KEY (ApplicantID) REFERENCES Applicant(ApplicantID)
 );
+
+-- Create DocumentProof table
 CREATE TABLE DocumentProof (
     ProofID INT AUTO_INCREMENT PRIMARY KEY,
-    ApplicantID INT,
-    ProofOfIdentity VARCHAR(255),
-    ProofOfAddress VARCHAR(255),
-    ProofOfDateOfBirth VARCHAR(255),
+    ApplicantID INT NOT NULL,
+    ProofOfIdentity VARCHAR(20) NOT NULL,
+    ProofOfAddress VARCHAR(100) NOT NULL,
+    ProofOfDateOfBirth VARCHAR(20) NOT NULL,
     FOREIGN KEY (ApplicantID) REFERENCES Applicant(ApplicantID)
 );
 
--- Insert each row individually to check for issues
-INSERT INTO Address (ApplicantID, AddressType, FlatNo, PremisesName, RoadName, AreaLocality, City, State, Pincode, Country)
-VALUES (1, 'Residence', 'B-101', 'Green Meadows', 'MG Road', 'Andheri West', 'Mumbai', 'Maharashtra', '400058', 'India');
-
-INSERT INTO Address (ApplicantID, AddressType, FlatNo, PremisesName, RoadName, AreaLocality, City, State, Pincode, Country)
-VALUES (1, 'Office', '12th Floor', 'Tech Park', 'Link Road', 'Malad West', 'Mumbai', 'Maharashtra', '400064', 'India');
-
-INSERT INTO ParentDetails (ApplicantID, ParentType, FullName, IsSingleParent, NameToPrint)
+-- Sample data insertions
+INSERT INTO Applicant (Title, LastName, FirstName, AbbreviationName, Gender, DateOfBirth, Status, SourceOfIncome)
 VALUES 
-(1, 'Father', 'Vikram Sharma', FALSE, 'Father'),
-(1, 'Mother', 'Meera Sharma', FALSE, 'Father'),
-(2, 'Father', 'Rakesh Singh', FALSE, 'Father');
+('Shri', 'Sharma', 'Rahul', 'R. Sharma', 'Male', '1990-05-12', 'Individual', 'Salary');
+
+INSERT INTO ParentDetails (ApplicantID, ParentType, LastName, FirstName, MiddleName, IsSingleParent, NameToPrint)
+VALUES 
+(1, 'Father', 'Sharma', 'Vikram', NULL, FALSE, 'Father'),
+(1, 'Mother', 'Sharma', 'Meera', NULL, FALSE, 'Father');
+
+INSERT INTO Address (ApplicantID, AddressType, FlatNo, PremisesName, RoadName, AreaLocality, City, State, Pincode, Country)
+VALUES 
+(1, 'Residence', 'B-101', 'Green Meadows', 'MG Road', 'Andheri West', 'Mumbai', 'Maharashtra', '400058', 'India');
+
 INSERT INTO CommunicationDetails (ApplicantID, CountryCode, AreaCode, TelephoneNumber, EmailID, PreferredAddress)
 VALUES 
-(1, '+91', '022', '9876543210', 'rahul.sharma@example.com', 'Residence'),
-(2, '+91', '033', '9876501234', 'neha.verma@example.com', 'Residence');
+(1, '+91', '022', '9876543210', 'rahul.sharma@example.com', 'Residence');
 
 INSERT INTO DocumentProof (ApplicantID, ProofOfIdentity, ProofOfAddress, ProofOfDateOfBirth)
 VALUES 
-(1, 'Passport', 'Electricity Bill', 'Birth Certificate'),
-(2, 'Voter ID', 'Aadhaar Card', 'School Leaving Certificate');
+(1, 'Passport', 'Electricity Bill', 'Birth Certificate');
